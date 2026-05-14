@@ -15,40 +15,63 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   Future<void> _handleLogin() async {
+    if (_emailController.text.trim().isEmpty) {
+      _showError('Please enter your email address');
+      return;
+    }
+    
+    if (_passwordController.text.isEmpty) {
+      _showError('Please enter your password');
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final response = await ApiService.login(
-        _emailController.text,
+        _emailController.text.trim(),
         _passwordController.text,
       );
       
       AuthService.setAuth(response['token'], response['user']);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        _showSuccess('Login successful! Welcome back.');
         context.go('/home');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showError('Login failed: ${e.toString()}');
       }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -63,7 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 60),
-                // Logo Area
+                
+                // Logo Area - Circular Frame with Local Logo
                 Container(
                   height: 120,
                   width: 120,
@@ -79,14 +103,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   child: ClipOval(
-                    child: Image.network(
-                      'https://images.unsplash.com/photo-1594553924364-c81768393248?auto=format&fit=crop&q=80&w=400',
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      height: 120,
+                      width: 120,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.auto_awesome, size: 60, color: AppColors.primary),
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: AppColors.primary,
+                        child: const Center(
+                          child: Text(
+                            'FYN',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
+                
+                // Brand Name
                 Text(
                   'FYN BRIDALS',
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
@@ -101,6 +141,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.black38, fontSize: 12),
                 ),
                 const SizedBox(height: 16),
+                
+                // Diagnose Connection Button
                 TextButton.icon(
                   onPressed: () async {
                     final status = await ApiService.diagnosticPing();
@@ -111,50 +153,105 @@ class _LoginScreenState extends State<LoginScreen> {
                           title: const Text('System Diagnostic'),
                           content: Text(status.toString()),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CLOSE'))
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('CLOSE'),
+                            ),
                           ],
                         ),
                       );
                     }
                   },
                   icon: const Icon(Icons.dvr, size: 14, color: Colors.blueGrey),
-                  label: const Text('DIAGNOSE CONNECTION', style: TextStyle(fontSize: 10, color: Colors.blueGrey)),
+                  label: const Text(
+                    'DIAGNOSE CONNECTION',
+                    style: TextStyle(fontSize: 10, color: Colors.blueGrey),
+                  ),
                 ),
                 const SizedBox(height: 32),
+                
+                // Welcome Back Text
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Welcome Back', style: Theme.of(context).textTheme.headlineMedium),
+                  child: Text(
+                    'Welcome Back',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
                 ),
                 const SizedBox(height: 40),
-                _buildTextField('EMAIL ADDRESS', 'your.name@atelier.com', _emailController),
-                _buildTextField('SECURE PASSWORD', '••••••••••••', _passwordController, isPassword: true),
+                
+                // Email Field
+                _buildTextField(
+                  'EMAIL ADDRESS',
+                  'your.name@atelier.com',
+                  _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                
+                // Password Field
+                _buildTextField(
+                  'SECURE PASSWORD',
+                  '••••••••••••',
+                  _passwordController,
+                  isPassword: true,
+                  obscureText: _obscurePassword,
+                  onToggleObscure: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
+                  },
+                ),
+                
+                // Forgot Password
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => context.push('/forgot-password'),
-                    child: const Text('FORGOT PASSWORD?', style: TextStyle(color: AppColors.secondary, fontSize: 10)),
+                    child: const Text(
+                      'FORGOT PASSWORD?',
+                      style: TextStyle(color: AppColors.secondary, fontSize: 10),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 40),
+                
+                // Login Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      padding: const Duration(milliseconds: 0) == Duration.zero ? const EdgeInsets.symmetric(vertical: 20) : null,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('AUTHENTICATE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            'AUTHENTICATE',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 24),
+                
+                // Register Link
                 Center(
                   child: TextButton(
                     onPressed: () => context.push('/register'),
-                    child: const Text('NEW TO FYN BRIDALS? CREATE ACCOUNT', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                    child: const Text(
+                      'NEW TO FYN BRIDALS? CREATE ACCOUNT',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -166,16 +263,31 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller, {bool isPassword = false}) {
+  Widget _buildTextField(
+    String label,
+    String hint,
+    TextEditingController controller, {
+    bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onToggleObscure,
+    TextInputType? keyboardType,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10, color: Colors.black38)),
+          Text(
+            label,
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(fontSize: 10, color: Colors.black38),
+          ),
           TextField(
             controller: controller,
-            obscureText: isPassword,
+            obscureText: isPassword ? obscureText : false,
+            keyboardType: keyboardType,
             style: const TextStyle(color: Colors.black87),
             decoration: InputDecoration(
               hintText: hint,
@@ -194,6 +306,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: AppColors.primary, width: 2),
               ),
+              suffixIcon: isPassword
+                  ? IconButton(
+                      icon: Icon(
+                        obscureText ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.black38,
+                      ),
+                      onPressed: onToggleObscure,
+                    )
+                  : null,
             ),
           ),
         ],

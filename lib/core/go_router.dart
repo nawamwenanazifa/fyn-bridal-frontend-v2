@@ -29,7 +29,10 @@ class AppRouter {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Page Not Found: ${state.uri.path}', style: const TextStyle(color: Colors.red)),
+            Text(
+              'Page Not Found: ${state.uri.path}',
+              style: const TextStyle(color: Colors.red),
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => context.go('/home'),

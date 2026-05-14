@@ -65,8 +65,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Assets
+  # Assets - Updated with all image files
   assets:
+    - assets/images/logo.png
+    - assets/images/onboard1.png
+    - assets/images/onboard2.png
+    - assets/images/onboard3.png
     - assets/images/
     - assets/icons/
     - assets/animations/
