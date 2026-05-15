@@ -19,6 +19,10 @@ import '../screens/booking_form_screen.dart';
 import '../screens/booking_confirmation_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/profile_screen.dart';
+// Admin screens
+import '../screens/admin/dashboard_screen.dart';
+import '../screens/admin/products_screen.dart';
+import '../screens/admin/add_product_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -43,7 +47,7 @@ class AppRouter {
       ),
     ),
     routes: [
-      // Auth Routes
+      // ── Auth Routes ────────────────────────────────────────────────────────
       GoRoute(
         path: '/splash',
         name: 'splash',
@@ -74,8 +78,8 @@ class AppRouter {
         name: 'forgot-password',
         builder: (context, state) => const ForgetPasswordScreen(),
       ),
-      
-      // Main App Routes
+
+      // ── Main App Routes ────────────────────────────────────────────────────
       GoRoute(
         path: '/home',
         name: 'home',
@@ -106,8 +110,38 @@ class AppRouter {
         name: 'moodboard',
         builder: (context, state) => const MoodboardScreen(),
       ),
-      
-      // Product Routes
+
+      // ── Admin Routes (nested) ──────────────────────────────────────────────
+      GoRoute(
+        path: '/admin',
+        name: 'admin',
+        builder: (context, state) => const AdminDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'products',           // resolves to /admin/products
+            name: 'admin-products',
+            builder: (context, state) => const AdminProductsScreen(),
+            routes: [
+              GoRoute(
+                path: 'add',            // resolves to /admin/products/add
+                name: 'admin-products-add',
+                builder: (context, state) => const AddProductScreen(),
+              ),
+              GoRoute(
+                path: 'edit/:id',       // resolves to /admin/products/edit/:id
+                name: 'admin-products-edit',
+                builder: (context, state) {
+                  // Wire to your EditProductScreen when ready;
+                  // for now reuses AddProductScreen as a placeholder
+                  return const AddProductScreen();
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // ── Product Routes ─────────────────────────────────────────────────────
       GoRoute(
         path: '/product-detail',
         name: 'product-detail',
@@ -121,8 +155,8 @@ class AppRouter {
           return CollectionScreen(collectionType: category);
         },
       ),
-      
-      // Booking Routes
+
+      // ── Booking Routes ─────────────────────────────────────────────────────
       GoRoute(
         path: '/bookings',
         name: 'bookings',
@@ -144,8 +178,8 @@ class AppRouter {
           return BookingConfirmationScreen(bookingDetails: bookingDetails);
         },
       ),
-      
-      // Chat Routes
+
+      // ── Chat Routes ────────────────────────────────────────────────────────
       GoRoute(
         path: '/messages',
         name: 'messages',

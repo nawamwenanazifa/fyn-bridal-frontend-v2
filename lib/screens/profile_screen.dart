@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/auth_service.dart';
@@ -24,6 +26,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _locationController = TextEditingController();
   String _selectedGender = 'female';
   bool _isEditing = false;
+  
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -90,13 +94,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    
-    if (pickedFile != null) {
-      setState(() => _isLoading = true);
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
       
-      try {
+      if (pickedFile != null) {
+        setState(() => _isLoading = true);
+        
         final token = AuthService.token;
         var request = http.MultipartRequest(
           'POST',
@@ -122,13 +125,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         } else {
           throw Exception('Upload failed');
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error uploading image: $e')),
-        );
-      } finally {
-        setState(() => _isLoading = false);
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error uploading image: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -319,7 +322,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              initialValue: _selectedGender,
+              value: _selectedGender,
               decoration: const InputDecoration(
                 labelText: 'Gender',
                 border: OutlineInputBorder(),
@@ -391,22 +394,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _locationController.dispose();
     super.dispose();
   }
-}
-
-class ImagePicker {
-  Future<XFile?> pickImage({required ImageSource source}) async {
-    // This is a placeholder for the actual image picking logic.
-    // In a real implementation, you would use the image_picker package.
-    return null;
-  }
-}
-
-class XFile {
-  final String path;
-  XFile(this.path);
-}
-
-enum ImageSource {
-  gallery,
-  camera,
 }

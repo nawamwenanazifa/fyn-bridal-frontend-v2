@@ -59,11 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'HOME'),
           BottomNavigationBarItem(icon: Icon(Icons.grid_view_outlined), activeIcon: Icon(Icons.grid_view), label: 'GALLERY'),
           BottomNavigationBarItem(icon: Icon(Icons.category_outlined), activeIcon: Icon(Icons.category), label: 'CATEGORIES'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline), 
-            activeIcon: Icon(Icons.person), 
-            label: 'PROFILE'
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'PROFILE'),
         ],
       ),
     );
@@ -81,18 +77,24 @@ class _HomeContent extends StatelessWidget {
     'assets/images/onboard3.png',
   ];
 
+  // ── Admin check: true if backend says admin OR fallback for dev ──────────
+  bool get _isAdmin =>
+      AuthService.user?['is_admin'] == true ||
+      AuthService.user?['role'] == 'admin' ||
+      AuthService.user?['isAdmin'] == true;
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Hero Section with Local Images
+          // ── Hero Section ─────────────────────────────────────────────────
           SizedBox(
             height: 600,
             width: double.infinity,
             child: Stack(
               children: [
-                // Background Image Carousel
+                // Background image carousel
                 PageView.builder(
                   controller: pageController,
                   itemCount: _heroImages.length,
@@ -101,18 +103,16 @@ class _HomeContent extends StatelessWidget {
                       _heroImages[index],
                       fit: BoxFit.cover,
                       width: double.infinity,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.primary.withOpacity(0.1),
-                          child: const Center(
-                            child: Icon(Icons.image_not_supported, size: 50),
-                          ),
-                        );
-                      },
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: AppColors.primary.withOpacity(0.1),
+                        child: const Center(
+                            child: Icon(Icons.image_not_supported, size: 50)),
+                      ),
                     );
                   },
                 ),
-                // Dark Gradient Overlay
+
+                // Dark gradient overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -125,20 +125,53 @@ class _HomeContent extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Content
+
+                // Top bar + hero text
                 Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 40),
-                    // Top Icons
+
+                    // ── Top icon row ────────────────────────────────────────
                     Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          // Admin icon — always shown; tapping prompts login if not authed
                           IconButton(
-                            icon: const Icon(Icons.person_outline, color: Colors.white, size: 30),
+                            icon: const Icon(
+                              Icons.admin_panel_settings,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                            tooltip: 'Admin Panel',
+                            onPressed: () {
+                              if (!AuthService.isAuthenticated) {
+                                context.push('/login');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please log in to access the admin panel'),
+                                  ),
+                                );
+                                return;
+                              }
+                              if (_isAdmin) {
+                                context.push('/admin');
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('You do not have admin access'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.person_outline,
+                                color: Colors.white, size: 30),
                             onPressed: () {
                               if (AuthService.isAuthenticated) {
                                 context.push('/profile');
@@ -147,42 +180,50 @@ class _HomeContent extends StatelessWidget {
                               }
                             },
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
                           IconButton(
-                            icon: const Icon(Icons.message_outlined, color: Colors.white, size: 28),
+                            icon: const Icon(Icons.message_outlined,
+                                color: Colors.white, size: 28),
                             onPressed: () => context.push('/messages'),
                           ),
                         ],
                       ),
                     ),
+
                     const Spacer(),
-                    // Hero Text
+
+                    // Hero text
                     Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Welcome to\nFyn Bridals', 
-                            style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                              color: Colors.white, 
-                              fontSize: 42,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            'Welcome to\nFyn Bridals',
+                            style: Theme.of(context)
+                                .textTheme
+                                .displayLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                           const SizedBox(height: 20),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary, 
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
-                            ), 
-                            onPressed: () {
-                              context.push('/gallery');
-                            }, 
+                              backgroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 32, vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0)),
+                            ),
+                            onPressed: () => context.push('/gallery'),
                             child: const Text(
-                              'BROWSE OUR LATEST DESIGNS', 
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+                              'BROWSE OUR LATEST DESIGNS',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -193,79 +234,53 @@ class _HomeContent extends StatelessWidget {
               ],
             ),
           ),
-          
-          // Quick Access to Services
+
+          // ── Quick Access Services ────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'YOUR ATELIER SERVICES', 
+                  'YOUR ATELIER SERVICES',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildQuickAction(
-                      context,
-                      'BOOKINGS',
-                      Icons.calendar_today,
-                      '/bookings',
-                    ),
+                    _buildQuickAction(context, 'BOOKINGS', Icons.calendar_today, '/bookings'),
                     const SizedBox(width: 16),
-                    _buildQuickAction(
-                      context,
-                      'MESSAGES',
-                      Icons.message_outlined,
-                      '/messages',
-                    ),
+                    _buildQuickAction(context, 'MESSAGES', Icons.message_outlined, '/messages'),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildQuickAction(
-                      context,
-                      'PROFILE',
-                      Icons.person_outline,
-                      '/profile',
-                    ),
+                    _buildQuickAction(context, 'PROFILE', Icons.person_outline, '/profile'),
                     const SizedBox(width: 16),
-                    _buildQuickAction(
-                      context,
-                      'GALLERY',
-                      Icons.photo_library_outlined,
-                      '/gallery',
-                    ),
+                    _buildQuickAction(context, 'GALLERY', Icons.photo_library_outlined, '/gallery'),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildQuickAction(
-                      context,
-                      'MOODBOARD',
-                      Icons.palette_outlined,
-                      '/moodboard',
-                    ),
+                    _buildQuickAction(context, 'MOODBOARD', Icons.palette_outlined, '/moodboard'),
                     const SizedBox(width: 16),
-                    _buildQuickAction(
-                      context,
-                      'LOOKBOOK',
-                      Icons.auto_stories_outlined,
-                      '/lookbook',
-                    ),
+                    _buildQuickAction(context, 'LOOKBOOK', Icons.auto_stories_outlined, '/lookbook'),
                   ],
                 ),
+                const SizedBox(height: 16),
+                // Admin card — full width, only shown for admin users
+                if (_isAdmin)
+                  _buildAdminCard(context),
               ],
             ),
           ),
-          
-          // Featured Categories Section
+
+          // ── Featured Collections ─────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -274,28 +289,22 @@ class _HomeContent extends StatelessWidget {
                 Text(
                   'FEATURED COLLECTIONS',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildFeaturedCard(
-                      context,
-                      'Gomesi',
-                      'assets/images/gomesi.jpeg',
-                      '/collection',
-                      'Gomesi',
-                    ),
+                    _buildFeaturedCard(context, 'Gomesi',
+                        'assets/images/gomesi.jpeg', '/collection', 'Gomesi'),
                     const SizedBox(width: 16),
                     _buildFeaturedCard(
-                      context,
-                      'Changing Dresses',
-                      'assets/images/changing dress.jpeg',
-                      '/collection',
-                      'ChangingDresses',
-                    ),
+                        context,
+                        'Changing Dresses',
+                        'assets/images/changing dress.jpeg',
+                        '/collection',
+                        'ChangingDresses'),
                   ],
                 ),
               ],
@@ -306,7 +315,8 @@ class _HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickAction(BuildContext context, String title, IconData icon, String route) {
+  Widget _buildQuickAction(
+      BuildContext context, String title, IconData icon, String route) {
     return Expanded(
       child: InkWell(
         onTap: () {
@@ -335,12 +345,11 @@ class _HomeContent extends StatelessWidget {
               Icon(icon, color: AppColors.primary, size: 28),
               const SizedBox(height: 8),
               Text(
-                title, 
+                title,
                 style: const TextStyle(
-                  fontSize: 10, 
-                  fontWeight: FontWeight.bold, 
-                  letterSpacing: 1,
-                ),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1),
               ),
             ],
           ),
@@ -349,12 +358,60 @@ class _HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildFeaturedCard(BuildContext context, String title, String imagePath, String route, String category) {
+  // Full-width admin card shown only for admin users
+  Widget _buildAdminCard(BuildContext context) {
+    return InkWell(
+      onTap: () => context.push('/admin'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.admin_panel_settings, color: Colors.white, size: 28),
+            SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ADMIN PANEL',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                Text(
+                  'Manage products, orders & gallery',
+                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                ),
+              ],
+            ),
+            Spacer(),
+            Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturedCard(BuildContext context, String title,
+      String imagePath, String route, String category) {
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          context.push(route, extra: category);
-        },
+        onTap: () => context.push(route, extra: category),
         child: Container(
           height: 200,
           decoration: BoxDecoration(

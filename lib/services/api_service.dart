@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
@@ -13,6 +15,8 @@ class ApiService {
   // For production, you would use:
   // static const String BASE_URL = 'https://yourdomain.com/api';
 
+  // ==================== PRODUCTS ====================
+  
   static Future<List<Product>> getProducts() async {
     try {
       final response = await http.get(
@@ -54,6 +58,8 @@ class ApiService {
     }
   }
 
+  // ==================== CATEGORIES ====================
+  
   static Future<List<String>> getCategories() async {
     try {
       final response = await http.get(
@@ -77,6 +83,25 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getCategoriesRaw() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$BASE_URL/categories'),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      return {'success': false, 'categories': []};
+    } catch (e) {
+      print('❌ GetCategoriesRaw Error: $e');
+      return {'success': false, 'categories': []};
+    }
+  }
+
+  // ==================== AUTHENTICATION ====================
+  
   static Future<Map<String, dynamic>> register(
     String name,
     String email,
@@ -195,6 +220,8 @@ class ApiService {
     }
   }
 
+  // ==================== BOOKINGS ====================
+  
   static Future<List<dynamic>> getBookings(String token) async {
     try {
       final response = await http.get(
@@ -255,30 +282,39 @@ class ApiService {
     }
   }
 
+  // ==================== ADMIN PRODUCT MANAGEMENT ====================
+  
   static Future<Product> createProduct(
     String token,
-    Map<String, dynamic> productData,
-  ) async {
+    Map<String, dynamic> productData, {
+    File? imageFile, Uint8List? imageBytes, String? imageName,
+  }) async {
     try {
-      final response = await http.post(
+      var request = http.MultipartRequest(
+        'POST',
         Uri.parse('$BASE_URL/products'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(productData),
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 201) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        if (data['success'] == true) {
-          return Product.fromJson(data['product']);
-        }
-        throw Exception(data['message'] ?? 'Failed to create product');
-      } else {
-        throw Exception('Failed to create product: ${response.statusCode}');
+      );
+      
+      request.headers['Authorization'] = 'Bearer $token';
+      
+      // Add text fields
+      productData.forEach((key, value) {
+        request.fields[key] = value.toString();
+      });
+      
+      // Add image if provided
+      if (imageFile != null) {
+        request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
       }
+      
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+      var result = json.decode(responseData);
+      
+      if (response.statusCode == 201 && result['success'] == true) {
+        return Product.fromJson(result['product']);
+      }
+      throw Exception(result['message'] ?? 'Failed to create product');
     } catch (e) {
       print('❌ CreateProduct Error: $e');
       rethrow;
@@ -288,28 +324,35 @@ class ApiService {
   static Future<Product> updateProduct(
     String token,
     int id,
-    Map<String, dynamic> productData,
-  ) async {
+    Map<String, dynamic> productData, {
+    File? imageFile,
+  }) async {
     try {
-      final response = await http.put(
+      var request = http.MultipartRequest(
+        'PUT',
         Uri.parse('$BASE_URL/products/$id'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(productData),
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        if (data['success'] == true) {
-          return Product.fromJson(data['product']);
-        }
-        throw Exception(data['message'] ?? 'Failed to update product');
-      } else {
-        throw Exception('Failed to update product: ${response.statusCode}');
+      );
+      
+      request.headers['Authorization'] = 'Bearer $token';
+      
+      // Add text fields
+      productData.forEach((key, value) {
+        request.fields[key] = value.toString();
+      });
+      
+      // Add image if provided
+      if (imageFile != null) {
+        request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
       }
+      
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+      var result = json.decode(responseData);
+      
+      if (response.statusCode == 200 && result['success'] == true) {
+        return Product.fromJson(result['product']);
+      }
+      throw Exception(result['message'] ?? 'Failed to update product');
     } catch (e) {
       print('❌ UpdateProduct Error: $e');
       rethrow;
