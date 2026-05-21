@@ -332,7 +332,7 @@ class GalleryDetailScreen extends StatefulWidget {
 class _GalleryDetailScreenState extends State<GalleryDetailScreen> {
   bool _isLiked = false;
   int _likeCount = 128;
-  int _commentCount = 34;
+  final int _commentCount = 34;
   bool _isSaved = false;
 
   void _toggleLike() {
@@ -466,19 +466,19 @@ class _GalleryDetailScreenState extends State<GalleryDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),
                     child: Row(
                       children: [
                         CircleAvatar(
                           radius: 16,
                           backgroundColor: AppColors.primary,
-                          child: const Icon(Icons.person,
+                          child: Icon(Icons.person,
                               color: Colors.white, size: 18),
                         ),
-                        const SizedBox(width: 8),
-                        const Text('Karma',
+                        SizedBox(width: 8),
+                        Text('Karma',
                             style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -681,7 +681,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                   leading: CircleAvatar(
                     backgroundColor:
                         AppColors.primary.withOpacity(0.15),
-                    child: Icon(Icons.person,
+                    child: const Icon(Icons.person,
                         color: AppColors.primary, size: 18),
                   ),
                   title: Text(_comments[i],
@@ -718,9 +718,9 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: _addComment,
-                    child: CircleAvatar(
+                    child: const CircleAvatar(
                       backgroundColor: AppColors.primary,
-                      child: const Icon(Icons.send_rounded,
+                      child: Icon(Icons.send_rounded,
                           color: Colors.white, size: 18),
                     ),
                   ),

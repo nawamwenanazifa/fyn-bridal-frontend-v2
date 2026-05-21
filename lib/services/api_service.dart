@@ -5,18 +5,10 @@ import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
 class ApiService {
-  // FIXED: Direct URL to your Laravel backend
-  // Change this port to match your Laravel server
-  static const String BASE_URL = 'http://localhost:8000/api';
-  
-  // Alternative if localhost doesn't work:
-  // static const String BASE_URL = 'http://127.0.0.1:8000/api';
-  
-  // For production, you would use:
-  // static const String BASE_URL = 'https://yourdomain.com/api';
+  static const String BASE_URL = 'http://127.0.0.1:8000/api';
 
   // ==================== PRODUCTS ====================
-  
+
   static Future<List<Product>> getProducts() async {
     try {
       final response = await http.get(
@@ -25,15 +17,15 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final data = json.decode(response.body);
         if (data['success'] == true) {
-          List products = data['products'];
-          return products.map((data) => Product.fromJson(data)).toList();
+          return (data['products'] as List)
+              .map((d) => Product.fromJson(d))
+              .toList();
         }
         throw Exception(data['message'] ?? 'Failed to load products');
-      } else {
-        throw Exception('Failed to load products: ${response.statusCode}');
       }
+      throw Exception('Failed to load products: ${response.statusCode}');
     } catch (e) {
       print('❌ GetProducts Error: $e');
       throw Exception('Network error: Could not connect to server');
@@ -47,11 +39,8 @@ class ApiService {
         headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Failed to load collection');
-      }
+      if (response.statusCode == 200) return json.decode(response.body);
+      throw Exception('Failed to load collection');
     } catch (e) {
       print('❌ GetCollection Error: $e');
       throw Exception('Network error: Could not connect to server');
@@ -59,7 +48,7 @@ class ApiService {
   }
 
   // ==================== CATEGORIES ====================
-  
+
   static Future<List<String>> getCategories() async {
     try {
       final response = await http.get(
@@ -68,15 +57,15 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final data = json.decode(response.body);
         if (data['success'] == true) {
-          List categories = data['categories'];
-          return categories.map((c) => c['name'].toString()).toList();
+          return (data['categories'] as List)
+              .map((c) => c['name'].toString())
+              .toList();
         }
         throw Exception(data['message'] ?? 'Failed to load categories');
-      } else {
-        throw Exception('Failed to load categories');
       }
+      throw Exception('Failed to load categories');
     } catch (e) {
       print('❌ GetCategories Error: $e');
       throw Exception('Network error: Could not connect to server');
@@ -90,9 +79,7 @@ class ApiService {
         headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      }
+      if (response.statusCode == 200) return json.decode(response.body);
       return {'success': false, 'categories': []};
     } catch (e) {
       print('❌ GetCategoriesRaw Error: $e');
@@ -101,20 +88,14 @@ class ApiService {
   }
 
   // ==================== AUTHENTICATION ====================
-  
+
   static Future<Map<String, dynamic>> register(
     String name,
     String email,
     String phone,
     String password,
   ) async {
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print('📍 Register URL: $BASE_URL/register');
-    print('📝 Name: $name');
-    print('📝 Email: $email');
-    print('📝 Phone: $phone');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
+    print('📍 Register: $BASE_URL/register  |  $email');
     try {
       final response = await http.post(
         Uri.parse('$BASE_URL/register'),
@@ -131,29 +112,19 @@ class ApiService {
         }),
       ).timeout(const Duration(seconds: 30));
 
-      print('✅ Status Code: ${response.statusCode}');
-      print('📦 Response: ${response.body}');
+      print('✅ ${response.statusCode}  ${response.body}');
+      if (response.body.isEmpty) throw Exception('Server returned empty response.');
 
-      if (response.body.isEmpty) {
-        throw Exception('Server returned empty response. Make sure Laravel is running at $BASE_URL');
-      }
-
-      final Map<String, dynamic> data = json.decode(response.body);
-      
+      final data = json.decode(response.body);
       if (response.statusCode == 201 || response.statusCode == 200) {
-        if (data['success'] == true) {
-          return data['data'];
-        }
+        if (data['success'] == true) return data['data'];
         throw Exception(data['message'] ?? 'Failed to register');
       } else if (response.statusCode == 422) {
-        String errors = '';
-        if (data['errors'] != null) {
-          errors = data['errors'].toString();
-        }
-        throw Exception('Validation failed: ${data['message'] ?? errors}');
-      } else {
-        throw Exception(data['message'] ?? 'Registration failed (${response.statusCode})');
+        throw Exception(
+            'Validation failed: ${data['message'] ?? data['errors']}');
       }
+      throw Exception(
+          data['message'] ?? 'Registration failed (${response.statusCode})');
     } catch (e) {
       print('❌ Registration Error: $e');
       rethrow;
@@ -161,11 +132,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> login(String email, String password) async {
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print('📍 Login URL: $BASE_URL/login');
-    print('📝 Email: $email');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
+    print('📍 Login: $BASE_URL/login  |  $email');
     try {
       final response = await http.post(
         Uri.parse('$BASE_URL/login'),
@@ -173,31 +140,19 @@ class ApiService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       ).timeout(const Duration(seconds: 30));
 
-      print('✅ Status Code: ${response.statusCode}');
-      print('📦 Response: ${response.body}');
+      print('✅ ${response.statusCode}  ${response.body}');
+      if (response.body.isEmpty) throw Exception('Server returned empty response.');
 
-      if (response.body.isEmpty) {
-        throw Exception('Server returned empty response. Make sure Laravel is running at $BASE_URL');
-      }
-
-      final Map<String, dynamic> data = json.decode(response.body);
+      final data = json.decode(response.body);
       
-      if (response.statusCode == 200) {
-        if (data['success'] == true) {
-          return data['data'];
-        }
-        throw Exception(data['message'] ?? 'Failed to login');
-      } else if (response.statusCode == 401) {
-        throw Exception('Invalid email or password');
-      } else {
-        throw Exception(data['message'] ?? 'Login failed (${response.statusCode})');
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
       }
+      
+      throw Exception(data['message'] ?? 'Login failed (${response.statusCode})');
     } catch (e) {
       print('❌ Login Error: $e');
       rethrow;
@@ -210,18 +165,16 @@ class ApiService {
         Uri.parse('$BASE_URL/diagnostic'),
         headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 5));
-      
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      }
-      return {'success': false, 'error': 'Status ${response.statusCode}', 'raw': response.body};
+
+      if (response.statusCode == 200) return json.decode(response.body);
+      return {'success': false, 'error': 'Status ${response.statusCode}'};
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
   // ==================== BOOKINGS ====================
-  
+
   static Future<List<dynamic>> getBookings(String token) async {
     try {
       final response = await http.get(
@@ -233,14 +186,11 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        if (data['success'] == true) {
-          return data['data'];
-        }
+        final data = json.decode(response.body);
+        if (data['success'] == true) return data['data'];
         throw Exception(data['message'] ?? 'Failed to load bookings');
-      } else {
-        throw Exception('Failed to load bookings: ${response.statusCode}');
       }
+      throw Exception('Failed to load bookings: ${response.statusCode}');
     } catch (e) {
       print('❌ GetBookings Error: $e');
       throw Exception('Network error: Could not connect to server');
@@ -263,19 +213,16 @@ class ApiService {
       ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 201) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        if (data['success'] == true) {
-          return data['data'];
-        }
+        final data = json.decode(response.body);
+        if (data['success'] == true) return data['data'];
         throw Exception(data['message'] ?? 'Failed to schedule booking');
-      } else {
-        String errorMsg = 'Failed to schedule booking';
-        try {
-          final data = json.decode(response.body);
-          errorMsg = data['message'] ?? data['error'] ?? errorMsg;
-        } catch (_) {}
-        throw Exception('$errorMsg (${response.statusCode})');
       }
+      String errorMsg = 'Failed to schedule booking';
+      try {
+        final data = json.decode(response.body);
+        errorMsg = data['message'] ?? data['error'] ?? errorMsg;
+      } catch (_) {}
+      throw Exception('$errorMsg (${response.statusCode})');
     } catch (e) {
       print('❌ ScheduleBooking Error: $e');
       rethrow;
@@ -283,34 +230,41 @@ class ApiService {
   }
 
   // ==================== ADMIN PRODUCT MANAGEMENT ====================
-  
+
   static Future<Product> createProduct(
     String token,
     Map<String, dynamic> productData, {
-    File? imageFile, Uint8List? imageBytes, String? imageName,
+    File? imageFile,
+    Uint8List? imageBytes,
+    String? imageName,
   }) async {
     try {
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$BASE_URL/products'),
       );
-      
       request.headers['Authorization'] = 'Bearer $token';
-      
-      // Add text fields
+      request.headers['Accept'] = 'application/json';
+
       productData.forEach((key, value) {
         request.fields[key] = value.toString();
       });
-      
-      // Add image if provided
-      if (imageFile != null) {
-        request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+
+      if (imageBytes != null && imageName != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: imageName,
+        ));
+      } else if (imageFile != null) {
+        request.files
+            .add(await http.MultipartFile.fromPath('image', imageFile.path));
       }
-      
-      var response = await request.send();
-      var responseData = await response.stream.bytesToString();
-      var result = json.decode(responseData);
-      
+
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+      final result = json.decode(responseData);
+
       if (response.statusCode == 201 && result['success'] == true) {
         return Product.fromJson(result['product']);
       }
@@ -326,29 +280,36 @@ class ApiService {
     int id,
     Map<String, dynamic> productData, {
     File? imageFile,
+    Uint8List? imageBytes,
+    String? imageName,
   }) async {
     try {
       var request = http.MultipartRequest(
         'PUT',
         Uri.parse('$BASE_URL/products/$id'),
       );
-      
       request.headers['Authorization'] = 'Bearer $token';
-      
-      // Add text fields
+      request.headers['Accept'] = 'application/json';
+
       productData.forEach((key, value) {
         request.fields[key] = value.toString();
       });
-      
-      // Add image if provided
-      if (imageFile != null) {
-        request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+
+      if (imageBytes != null && imageName != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: imageName,
+        ));
+      } else if (imageFile != null) {
+        request.files
+            .add(await http.MultipartFile.fromPath('image', imageFile.path));
       }
-      
-      var response = await request.send();
-      var responseData = await response.stream.bytesToString();
-      var result = json.decode(responseData);
-      
+
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+      final result = json.decode(responseData);
+
       if (response.statusCode == 200 && result['success'] == true) {
         return Product.fromJson(result['product']);
       }
@@ -370,13 +331,147 @@ class ApiService {
       ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final data = json.decode(response.body);
         return data['success'] == true;
-      } else {
-        throw Exception('Failed to delete product: ${response.statusCode}');
       }
+      throw Exception('Failed to delete product: ${response.statusCode}');
     } catch (e) {
       print('❌ DeleteProduct Error: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== ADMIN USER MANAGEMENT ====================
+
+  static Future<List<dynamic>> getUsers(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$BASE_URL/users'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) return data['users'];
+        throw Exception(data['message'] ?? 'Failed to load users');
+      }
+      throw Exception('Failed to load users: ${response.statusCode}');
+    } catch (e) {
+      print('❌ GetUsers Error: $e');
+      throw Exception('Network error: Could not connect to server');
+    }
+  }
+
+  static Future<bool> deleteUser(String token, int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$BASE_URL/users/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      }
+      throw Exception('Failed to delete user: ${response.statusCode}');
+    } catch (e) {
+      print('❌ DeleteUser Error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> toggleUserStatus(
+      String token, int id) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$BASE_URL/users/$id/toggle'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) return data['user'];
+        throw Exception(data['message'] ?? 'Failed to toggle user status');
+      }
+      throw Exception('Failed to toggle user: ${response.statusCode}');
+    } catch (e) {
+      print('❌ ToggleUserStatus Error: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== CHAT / MESSAGES ====================
+
+  static Future<Map<String, dynamic>> getConversations(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$BASE_URL/messages/conversations'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      throw Exception('Failed to load conversations');
+    } catch (e) {
+      print('❌ GetConversations Error: $e');
+      throw Exception('Network error: Could not connect to server');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMessages(
+      String token, int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$BASE_URL/messages/$userId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      throw Exception('Failed to load messages');
+    } catch (e) {
+      print('❌ GetMessages Error: $e');
+      throw Exception('Network error: Could not connect to server');
+    }
+  }
+
+  static Future<void> sendMessage(
+      String token, int receiverId, String message) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$BASE_URL/messages/send'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'receiver_id': receiverId,
+          'message': message,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to send message');
+      }
+    } catch (e) {
+      print('❌ SendMessage Error: $e');
       rethrow;
     }
   }

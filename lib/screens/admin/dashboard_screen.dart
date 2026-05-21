@@ -40,8 +40,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   ),
                   Text(
                     user?['email'] ?? '',
-                    style:
-                        const TextStyle(color: Colors.white70, fontSize: 12),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -61,6 +60,14 @@ class AdminDashboardScreen extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 context.go('/admin/products');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.people),
+              title: const Text('Users'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/admin/users');
               },
             ),
             ListTile(
@@ -106,21 +113,21 @@ class AdminDashboardScreen extends StatelessWidget {
           children: [
             Text(
               'Welcome back, ${user?['name']?.split(' ')[0] ?? 'Admin'}!',
-              style: const TextStyle(
-                  fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            const Text('Manage your store from here'),
-            const SizedBox(height: 32),
+            const SizedBox(height: 4),
+            const Text('Manage your store from here',
+                style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 24),
 
             // ── Stat cards ───────────────────────────────────────────────
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 1.4,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 1.35,
               children: [
                 _DashCard(
                   title: 'Products',
@@ -129,10 +136,10 @@ class AdminDashboardScreen extends StatelessWidget {
                   onTap: () => context.go('/admin/products'),
                 ),
                 _DashCard(
-                  title: 'Categories',
-                  icon: Icons.category_rounded,
+                  title: 'Users',
+                  icon: Icons.people_rounded,
                   color: const Color(0xFF2DBD9B),
-                  onTap: () => context.go('/categories'),
+                  onTap: () => context.go('/admin/users'),
                 ),
                 _DashCard(
                   title: 'Bookings',
@@ -149,16 +156,16 @@ class AdminDashboardScreen extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
 
             // ── Quick actions ─────────────────────────────────────────────
             Text(
               'QUICK ACTIONS',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.5,
-                color: Colors.grey[600],
+                color: Colors.grey[500],
               ),
             ),
             const SizedBox(height: 12),
@@ -173,23 +180,26 @@ class AdminDashboardScreen extends StatelessWidget {
             const SizedBox(height: 10),
             _QuickAction(
               icon: Icons.people_rounded,
-              label: 'View Users',
-              subtitle: 'See all registered customers',
-              color: const Color(0xFF6C63FF),
-              onTap: () {
-                // wire to your users screen when ready
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Users screen coming soon!')),
-                );
-              },
+              label: 'Manage Users',
+              subtitle: 'View, activate or remove customers',
+              color: const Color(0xFF2DBD9B),
+              onTap: () => context.go('/admin/users'),
             ),
             const SizedBox(height: 10),
             _QuickAction(
-              icon: Icons.bar_chart_rounded,
+              icon: Icons.book_online_rounded,
               label: 'View Bookings',
               subtitle: 'Manage all customer bookings',
               color: const Color(0xFFFF6B6B),
               onTap: () => context.go('/bookings'),
+            ),
+            const SizedBox(height: 10),
+            _QuickAction(
+              icon: Icons.photo_library_rounded,
+              label: 'Edit Gallery',
+              subtitle: 'Add or remove gallery images',
+              color: const Color(0xFFFFB347),
+              onTap: () => context.go('/gallery'),
             ),
           ],
         ),
@@ -199,7 +209,7 @@ class AdminDashboardScreen extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Dashboard card widget
+// Dashboard card
 // ─────────────────────────────────────────────────────────────────────────────
 class _DashCard extends StatelessWidget {
   final String title;
@@ -250,7 +260,7 @@ class _DashCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Quick action row widget
+// Quick action row
 // ─────────────────────────────────────────────────────────────────────────────
 class _QuickAction extends StatelessWidget {
   final IconData icon;
@@ -304,8 +314,8 @@ class _QuickAction extends StatelessWidget {
                       style: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 14)),
                   Text(subtitle,
-                      style: TextStyle(
-                          fontSize: 11, color: Colors.grey[500])),
+                      style:
+                          TextStyle(fontSize: 11, color: Colors.grey[500])),
                 ],
               ),
             ),

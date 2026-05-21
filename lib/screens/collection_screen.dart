@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../services/api_service.dart';
-import '../core/theme.dart';
 import 'pinterest_collection_page.dart';
 
 class CollectionScreen extends StatefulWidget {

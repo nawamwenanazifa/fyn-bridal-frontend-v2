@@ -23,6 +23,7 @@ import '../screens/profile_screen.dart';
 import '../screens/admin/dashboard_screen.dart';
 import '../screens/admin/products_screen.dart';
 import '../screens/admin/add_product_screen.dart';
+import '../screens/admin/users_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -118,25 +119,26 @@ class AppRouter {
         builder: (context, state) => const AdminDashboardScreen(),
         routes: [
           GoRoute(
-            path: 'products',           // resolves to /admin/products
+            path: 'products',             // /admin/products
             name: 'admin-products',
             builder: (context, state) => const AdminProductsScreen(),
             routes: [
               GoRoute(
-                path: 'add',            // resolves to /admin/products/add
+                path: 'add',              // /admin/products/add
                 name: 'admin-products-add',
                 builder: (context, state) => const AddProductScreen(),
               ),
               GoRoute(
-                path: 'edit/:id',       // resolves to /admin/products/edit/:id
+                path: 'edit/:id',         // /admin/products/edit/:id
                 name: 'admin-products-edit',
-                builder: (context, state) {
-                  // Wire to your EditProductScreen when ready;
-                  // for now reuses AddProductScreen as a placeholder
-                  return const AddProductScreen();
-                },
+                builder: (context, state) => const AddProductScreen(),
               ),
             ],
+          ),
+          GoRoute(
+            path: 'users',               // /admin/users
+            name: 'admin-users',
+            builder: (context, state) => const AdminUsersScreen(),
           ),
         ],
       ),

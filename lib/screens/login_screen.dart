@@ -14,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -29,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
+    
     try {
       final response = await ApiService.login(
         _emailController.text.trim(),
@@ -77,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -87,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 60),
                 
-                // Logo Area - Circular Frame with Local Logo
+                // Logo Area
                 Container(
                   height: 120,
                   width: 120,
@@ -139,34 +141,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Text(
                   'Your Journey to Elegance Starts Here',
                   style: TextStyle(color: Colors.black38, fontSize: 12),
-                ),
-                const SizedBox(height: 16),
-                
-                // Diagnose Connection Button
-                TextButton.icon(
-                  onPressed: () async {
-                    final status = await ApiService.diagnosticPing();
-                    if (mounted) {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('System Diagnostic'),
-                          content: Text(status.toString()),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('CLOSE'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.dvr, size: 14, color: Colors.blueGrey),
-                  label: const Text(
-                    'DIAGNOSE CONNECTION',
-                    style: TextStyle(fontSize: 10, color: Colors.blueGrey),
-                  ),
                 ),
                 const SizedBox(height: 32),
                 
@@ -320,5 +294,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

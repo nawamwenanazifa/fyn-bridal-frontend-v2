@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'core/theme.dart';
 import 'core/go_router.dart';
+import 'services/auth_service.dart';
 
-void main() => runApp(const FynBridalsApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthService.init();  // Load saved token and user data
+  runApp(const FynBridalsApp());
+}
 
 class FynBridalsApp extends StatelessWidget {
   const FynBridalsApp({super.key});

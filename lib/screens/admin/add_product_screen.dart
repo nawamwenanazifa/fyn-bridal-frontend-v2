@@ -207,7 +207,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         labelText: 'Category *',
                         border: OutlineInputBorder(),
                       ),
-                      value: _selectedCategoryId,
+                      initialValue: _selectedCategoryId,
                       items: _categories.map((c) {
                         return DropdownMenuItem<int>(
                           value: c['id'],
@@ -274,14 +274,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       title: const Text('In Stock'),
                       value: _inStock,
                       onChanged: (v) => setState(() => _inStock = v),
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                       contentPadding: EdgeInsets.zero,
                     ),
                     SwitchListTile(
                       title: const Text('Featured Product'),
                       value: _isFeatured,
                       onChanged: (v) => setState(() => _isFeatured = v),
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                       contentPadding: EdgeInsets.zero,
                     ),
                     const SizedBox(height: 32),
