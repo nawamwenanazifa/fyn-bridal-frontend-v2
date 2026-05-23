@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../core/theme.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/error_handler.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final Map<String, dynamic>? product;
@@ -17,7 +18,6 @@ class BookingFormScreen extends StatefulWidget {
 class _BookingFormScreenState extends State<BookingFormScreen> {
   final _formKey = GlobalKey<FormState>();
   
-  late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _addressController;
@@ -29,17 +29,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   bool _isLoading = false;
 
   final List<String> _services = [
-    'Fitting & Alteration',
-    'Custom Design',
     'Consultation',
     'Purchase',
-    'Rental Inquiry',
+    'Custom Design',
+    'Fitting',
+    'Alterations',
   ];
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: AuthService.user?['name'] ?? '');
     _phoneController = TextEditingController(text: AuthService.user?['phone'] ?? '');
     _emailController = TextEditingController(text: AuthService.user?['email'] ?? '');
     _addressController = TextEditingController();
@@ -48,7 +47,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _addressController.dispose();
@@ -112,30 +110,44 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final bookingDateTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      );
+
       final bookingData = {
-        'user_id': AuthService.user?['id'] ?? AuthService.user?['uid'] ?? 'guest',
-        'service': _selectedService,
-        'booking_date': '${DateFormat('yyyy-MM-dd').format(_selectedDate)} ${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}:00',
-        'customer_name': _nameController.text,
-        'phone': _phoneController.text,
-        'email': _emailController.text,
-        'address': _addressController.text,
-        'notes': _requestsController.text,
-        'product_name': widget.product?['name'],
+        'service_type': _selectedService,
+        'booking_date': bookingDateTime.toIso8601String(),
+        'phone': _phoneController.text.trim(),
+        'email': _emailController.text.trim(),
+        'notes': _requestsController.text.trim(),
       };
 
-      final result = await ApiService.scheduleBooking(AuthService.token ?? '', bookingData);
+      final result = await ApiService.bookAppointment(
+        phone: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        serviceType: _selectedService,
+        bookingDate: bookingDateTime.toIso8601String(),
+        notes: _requestsController.text.trim(),
+      );
       
       if (mounted) {
+        ErrorHandler.showSuccess(context, 'Booking created successfully!');
+        
         final fullDetails = Map<String, dynamic>.from(bookingData);
-        fullDetails['id'] = result['id'];
-        context.pushReplacement('/booking-confirmation', extra: fullDetails);
+        
+        // FIXED: safely extract id — handles both {data: {id: ...}} and {id: ...} shapes
+        fullDetails['id'] = result['data']?['id'] ?? result['id'];
+        fullDetails['service'] = _selectedService;
+        
+        context.push('/booking-confirmation', extra: fullDetails);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        ErrorHandler.showError(context, 'Failed to create booking: ${e.toString()}');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -154,6 +166,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        foregroundColor: AppColors.primary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, size: 18, color: AppColors.primary),
           onPressed: () => context.pop(),
@@ -204,8 +217,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               ],
 
               _buildSectionTitle('CONTACT INFORMATION'),
-              _buildTextField('Full Name', _nameController, Icons.person_outline),
-              const SizedBox(height: 16),
               _buildTextField('Phone Number', _phoneController, Icons.phone_outlined, keyboardType: TextInputType.phone),
               const SizedBox(height: 16),
               _buildTextField('Email Address', _emailController, Icons.email_outlined, keyboardType: TextInputType.emailAddress),
@@ -214,10 +225,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               _buildSectionTitle('APPOINTMENT DETAILS'),
               
               DropdownButtonFormField<String>(
-                initialValue: _selectedService,
+                value: _selectedService,
                 decoration: _inputDecoration('Service Type', Icons.room_service_outlined),
                 items: _services.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                 onChanged: (val) => setState(() => _selectedService = val!),
+                validator: (value) => value == null ? 'Please select a service type' : null,
               ),
               
               const SizedBox(height: 16),
@@ -231,6 +243,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                           'Date',
                           TextEditingController(text: DateFormat('MMM dd, yyyy').format(_selectedDate)),
                           Icons.calendar_today_outlined,
+                          enabled: false,
                         ),
                       ),
                     ),
@@ -244,6 +257,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                           'Time',
                           TextEditingController(text: _selectedTime.format(context)),
                           Icons.access_time,
+                          enabled: false,
                         ),
                       ),
                     ),
@@ -255,7 +269,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               _buildSectionTitle('ADDITIONAL INFORMATION'),
               _buildTextField('Fitting Address (Optional)', _addressController, Icons.location_on_outlined),
               const SizedBox(height: 16),
-              _buildTextField('Special Requests', _requestsController, Icons.notes, maxLines: 3),
+              _buildTextField('Special Requests (Optional)', _requestsController, Icons.notes, maxLines: 3),
 
               const SizedBox(height: 40),
               SizedBox(
@@ -304,16 +318,21 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     IconData icon, {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
+    bool enabled = true,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      enabled: enabled,
       decoration: _inputDecoration(label, icon),
       validator: (value) {
         if (value == null || value.isEmpty) {
           if (label.contains('Optional')) return null;
           return 'Please enter $label';
+        }
+        if (label.contains('Email') && !value.contains('@')) {
+          return 'Please enter a valid email';
         }
         return null;
       },

@@ -22,8 +22,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -50,11 +48,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
             itemCount: bookings.length,
             itemBuilder: (context, index) {
               final booking = bookings[index];
-              return _buildBookingCard(
-                booking['service'] ?? 'Consultation',
-                booking['booking_date'] ?? 'No date',
-                booking['status'] ?? 'Pending',
-              );
+              // Fix: use service_type instead of service
+              final serviceName = booking['service_type'] ?? booking['service'] ?? 'Consultation';
+              final bookingDate = booking['booking_date'] ?? 'No date';
+              final status = booking['status'] ?? 'upcoming';
+              
+              return _buildBookingCard(serviceName, bookingDate, status);
             },
           );
         },
@@ -72,6 +71,49 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 
   Widget _buildBookingCard(String title, String date, String status) {
+    // Format date nicely from ISO string
+    String formattedDate = date;
+    try {
+      if (date != 'No date' && date.isNotEmpty) {
+        final parsedDate = DateTime.parse(date);
+        formattedDate = '${parsedDate.day}/${parsedDate.month}/${parsedDate.year} at ${parsedDate.hour}:${parsedDate.minute.toString().padLeft(2, '0')}';
+      }
+    } catch (e) {
+      // Keep original if parsing fails
+    }
+    
+    // Determine status color
+    Color statusColor;
+    Color statusBgColor;
+    String statusText;
+    
+    switch (status.toLowerCase()) {
+      case 'upcoming':
+        statusColor = Colors.green;
+        statusBgColor = Colors.green.withOpacity(0.1);
+        statusText = 'UPCOMING';
+        break;
+      case 'confirmed':
+        statusColor = Colors.blue;
+        statusBgColor = Colors.blue.withOpacity(0.1);
+        statusText = 'CONFIRMED';
+        break;
+      case 'cancelled':
+        statusColor = Colors.red;
+        statusBgColor = Colors.red.withOpacity(0.1);
+        statusText = 'CANCELLED';
+        break;
+      case 'completed':
+        statusColor = Colors.purple;
+        statusBgColor = Colors.purple.withOpacity(0.1);
+        statusText = 'COMPLETED';
+        break;
+      default:
+        statusColor = Colors.orange;
+        statusBgColor = Colors.orange.withOpacity(0.1);
+        statusText = status.toUpperCase();
+    }
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -83,34 +125,34 @@ class _BookingsScreenState extends State<BookingsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title, 
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                date, 
-                style: const TextStyle(fontSize: 12, color: Colors.black45),
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title, 
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  formattedDate, 
+                  style: const TextStyle(fontSize: 12, color: Colors.black45),
+                ),
+              ],
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: status == 'Confirmed' 
-                  ? Colors.green.withOpacity(0.1) 
-                  : Colors.orange.withOpacity(0.1), 
+              color: statusBgColor, 
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              status, 
+              statusText, 
               style: TextStyle(
                 fontSize: 10, 
                 fontWeight: FontWeight.bold, 
-                color: status == 'Confirmed' ? Colors.green : Colors.orange,
+                color: statusColor,
               ),
             ),
           )

@@ -14,7 +14,6 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   late Future<List<String>> _categoriesFuture;
 
-  // Dynamic icon mapping based on category name
   IconData _getCategoryIcon(String categoryName) {
     final lowerName = categoryName.toLowerCase();
     if (lowerName.contains('gomesi')) return LucideIcons.crown;
@@ -26,7 +25,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return LucideIcons.grid;
   }
 
-  // Dynamic color based on category name
   Color _getCategoryColor(String categoryName) {
     final lowerName = categoryName.toLowerCase();
     if (lowerName.contains('gomesi')) return const Color(0xFFE91E63);
@@ -63,14 +61,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         title: Text(
           'Our Collections',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
-          ),
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.search, color: AppColors.primary), 
+            icon: const Icon(LucideIcons.search, color: AppColors.primary),
             onPressed: () {},
           )
         ],
@@ -89,8 +87,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ],
               ),
             );
-          } 
-          
+          }
+
           if (snapshot.hasError) {
             return Center(
               child: Padding(
@@ -98,11 +96,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(LucideIcons.alertCircle, size: 64, color: Colors.red),
+                    const Icon(LucideIcons.alertCircle,
+                        size: 64, color: Colors.red),
                     const SizedBox(height: 16),
                     const Text(
                       'Unable to Load Categories',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -125,7 +125,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               ),
             );
           }
-          
+
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
@@ -145,27 +145,25 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           }
 
           final categories = snapshot.data!;
-          
+
           return RefreshIndicator(
             onRefresh: _loadCategories,
             child: GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.85,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.3, // ← increased from 0.85 → cards are now shorter
               ),
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 final categoryName = categories[index];
                 final icon = _getCategoryIcon(categoryName);
                 final color = _getCategoryColor(categoryName);
-                
+
                 return GestureDetector(
-                  onTap: () {
-                    context.push('/collection', extra: categoryName);
-                  },
+                  onTap: () => context.push('/collection', extra: categoryName),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -181,50 +179,48 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Category Icon Circle
+                        // Icon circle — smaller to fit shorter card
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: 52,
+                          height: 52,
                           decoration: BoxDecoration(
                             color: color.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            icon,
-                            size: 40,
-                            color: color,
-                          ),
+                          child: Icon(icon, size: 26, color: color),
                         ),
-                        const SizedBox(height: 16),
-                        // Category Name
+                        const SizedBox(height: 8),
+                        // Category name
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
                             categoryName,
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
+                              letterSpacing: 0.3,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        // Shop Now Button
+                        const SizedBox(height: 6),
+                        // Shop badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
                             color: color.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
+                          child: Text(
                             'SHOP',
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 9,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1,
+                              color: color,
                             ),
                           ),
                         ),

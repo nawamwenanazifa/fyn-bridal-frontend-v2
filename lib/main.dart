@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'core/theme.dart';
 import 'core/go_router.dart';
 import 'services/auth_service.dart';
+import 'utils/error_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AuthService.init();  // Load saved token and user data
+  
+  // Initialize global error handling
+  ErrorUtils.init();
+  
+  await AuthService.init();
   runApp(const FynBridalsApp());
 }
 

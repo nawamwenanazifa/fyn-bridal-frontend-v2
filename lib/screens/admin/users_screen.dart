@@ -467,7 +467,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                                           BorderRadius
                                                               .circular(6),
                                                     ),
-                                                    child: Text(
+                                                    child: const Text(
                                                       'Admin',
                                                       style: TextStyle(
                                                           fontSize: 9,

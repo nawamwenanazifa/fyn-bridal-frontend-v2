@@ -202,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: _isLoading 
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
-                            'AUTHENTICATE',
+                            'LOGIN',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,

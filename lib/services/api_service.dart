@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../models/product.dart';
+import 'auth_service.dart';
 
 class ApiService {
   static const String BASE_URL = 'http://127.0.0.1:8000/api';
@@ -225,6 +226,59 @@ class ApiService {
       throw Exception('$errorMsg (${response.statusCode})');
     } catch (e) {
       print('❌ ScheduleBooking Error: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== BOOK APPOINTMENT (NEW) ====================
+
+  static Future<Map<String, dynamic>> bookAppointment({
+    required String phone,
+    required String email,
+    required String serviceType,
+    required String bookingDate,
+    String? notes,
+  }) async {
+    try {
+      print('📍 Booking Appointment: $BASE_URL/bookings');
+      print('📦 Data: phone=$phone, email=$email, serviceType=$serviceType, bookingDate=$bookingDate');
+
+      final response = await http.post(
+        Uri.parse('$BASE_URL/bookings'),
+        headers: {
+          'Authorization': 'Bearer ${AuthService.token}',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'phone': phone,
+          'email': email,
+          'service_type': serviceType,
+          'booking_date': bookingDate,
+          'notes': notes ?? '',
+        }),
+      ).timeout(const Duration(seconds: 30));
+
+      print('✅ Booking response status: ${response.statusCode}');
+      print('✅ Response body: ${response.body}');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return data;
+        }
+        throw Exception(data['message'] ?? 'Failed to create booking');
+      }
+      
+      // Try to parse error message
+      try {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to create booking: ${response.statusCode}');
+      } catch (_) {
+        throw Exception('Failed to create booking: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ BookAppointment Error: $e');
       rethrow;
     }
   }

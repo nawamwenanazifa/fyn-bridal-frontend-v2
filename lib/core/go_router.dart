@@ -19,6 +19,11 @@ import '../screens/booking_form_screen.dart';
 import '../screens/booking_confirmation_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/profile_screen.dart';
+// Order Screens
+import '../screens/checkout_screen.dart';
+import '../screens/order_confirmation_screen.dart';
+import '../screens/order_history_screen.dart';
+import '../screens/order_details_screen.dart';
 // Admin screens
 import '../screens/admin/dashboard_screen.dart';
 import '../screens/admin/products_screen.dart';
@@ -110,6 +115,41 @@ class AppRouter {
         path: '/moodboard',
         name: 'moodboard',
         builder: (context, state) => const MoodboardScreen(),
+      ),
+
+      // ── Order Routes ───────────────────────────────────────────────────────
+      GoRoute(
+        path: '/checkout/:bookingId/:totalAmount',
+        name: 'checkout',
+        builder: (context, state) {
+          final bookingId = int.parse(state.pathParameters['bookingId']!);
+          final totalAmount = double.parse(state.pathParameters['totalAmount']!);
+          return CheckoutScreen(
+            bookingId: bookingId,
+            totalAmount: totalAmount,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/order-confirmation/:orderId',
+        name: 'order-confirmation',
+        builder: (context, state) {
+          final orderId = int.parse(state.pathParameters['orderId']!);
+          return OrderConfirmationScreen(orderId: orderId);
+        },
+      ),
+      GoRoute(
+        path: '/orders',
+        name: 'orders',
+        builder: (context, state) => const OrderHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/order-details/:orderId',
+        name: 'order-details',
+        builder: (context, state) {
+          final orderId = int.parse(state.pathParameters['orderId']!);
+          return OrderDetailsScreen(orderId: orderId);
+        },
       ),
 
       // ── Admin Routes (nested) ──────────────────────────────────────────────
